@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, mensagemErro } from '../lib/supabase'
 import { useDados } from '../lib/useDados'
 import { useAuth } from '../lib/auth'
 import { brl, brlK, num } from '../lib/format'
 import type { Item } from '../lib/tipos'
 import { Chip, Estado, Vazio } from '../components/ui'
 import { Topo } from '../components/Layout'
+import EditarItem, { alternarIncluido } from '../components/EditarItem'
 
 type Filtro = 'incluidos' | 'opcionais' | 'revisar' | 'todos'
 
@@ -21,8 +22,27 @@ const CENARIO: Record<string, string> = { economico: 'Econômico', medio: 'Médi
 // valor exibido: o orçado (itens incluídos) ou, para opcionais fora do total, o valor do cenário escolhido
 const valorItem = (i: Item) => (i.incluido ? Number(i.orcado) : Number(i.valor_orcado_cenario))
 
-export function ItemLinha({ i }: { i: Item }) {
+export function ItemLinha({ i, onAlterado }: { i: Item; onAlterado?: () => void }) {
+  const { membro } = useAuth()
+  const admin = membro?.perfil === 'admin' && !!onAlterado
   const [aberto, setAberto] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const [ocupado, setOcupado] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+
+  async function alternar() {
+    setOcupado(true)
+    setErro(null)
+    try {
+      await alternarIncluido(i)
+      onAlterado?.()
+    } catch (e) {
+      setErro(mensagemErro(e))
+    } finally {
+      setOcupado(false)
+    }
+  }
+
   return (
     <li className={`item ${i.incluido ? '' : 'fora'}`}>
       <button className="item-top" onClick={() => setAberto(!aberto)} aria-expanded={aberto}>
@@ -41,24 +61,82 @@ export function ItemLinha({ i }: { i: Item }) {
         {i.revisar && <Chip tom="bad">revisar</Chip>}
       </div>
       {aberto && (
-        <dl className="item-det">
-          <div><dt>Grupo</dt><dd>{i.grupo ?? '—'}</dd></div>
-          <div><dt>Quantidade</dt><dd>{num(i.quantidade)} {i.unidade ?? ''}</dd></div>
-          <div><dt>Cenário</dt><dd>{CENARIO[i.cenario_escolhido ?? ''] ?? '—'}</dd></div>
-          <div><dt>Prioridade</dt><dd>{i.prioridade ?? '—'}</dd></div>
-          <div><dt>Contratado</dt><dd className="num">{brl(i.contratado)}</dd></div>
-          <div><dt>Pago</dt><dd className="num">{brl(i.pago)}</dd></div>
-          {i.revisar_motivos?.length > 0 && (
-            <div className="full"><dt>Revisar</dt><dd>{i.revisar_motivos.map((m) => MOTIVO[m] ?? m).join(', ')}</dd></div>
+        <>
+          <dl className="item-det">
+            <div><dt>Grupo</dt><dd>{i.grupo ?? '—'}</dd></div>
+            <div><dt>Quantidade</dt><dd>{num(i.quantidade)} {i.unidade ?? ''}</dd></div>
+            <div><dt>Cenário</dt><dd>{CENARIO[i.cenario_escolhido ?? ''] ?? '—'}</dd></div>
+            <div><dt>Prioridade</dt><dd>{i.prioridade ?? '—'}</dd></div>
+            <div><dt>Contratado</dt><dd className="num">{brl(i.contratado)}</dd></div>
+            <div><dt>Pago</dt><dd className="num">{brl(i.pago)}</dd></div>
+            {i.revisar_motivos?.length > 0 && (
+              <div className="full"><dt>Revisar</dt><dd>{i.revisar_motivos.map((m) => MOTIVO[m] ?? m).join(', ')}</dd></div>
+            )}
+          </dl>
+          {admin && (
+            <div className="item-acoes">
+              <button className="btn sec" disabled={ocupado} onClick={alternar}>
+                {ocupado ? '…' : i.incluido ? 'Tirar do total' : 'Incluir no total'}
+              </button>
+              <button className="btn" onClick={() => setEditando(true)}>Editar valores</button>
+            </div>
           )}
-        </dl>
+          {erro && <p className="msg erro item-msg">{erro}</p>}
+        </>
+      )}
+      {editando && (
+        <EditarItem
+          item={i}
+          aoFechar={() => setEditando(false)}
+          aoSalvar={() => {
+            setEditando(false)
+            onAlterado?.()
+          }}
+        />
       )}
     </li>
   )
 }
 
+// Ações em lote para uma classe inteira (ex.: "Opcionais"), com confirmação em 2 toques.
+function AcoesGrupo({ itens, onAlterado }: { itens: Item[]; onAlterado: () => void }) {
+  const [confirmar, setConfirmar] = useState<boolean | null>(null) // valor de incluido a aplicar
+  const [ocupado, setOcupado] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const dentro = itens.filter((i) => i.incluido).length
+  const fora = itens.length - dentro
+
+  async function aplicar(incluido: boolean) {
+    setOcupado(true)
+    setErro(null)
+    const ids = itens.filter((i) => i.incluido !== incluido && i.tipo_custo !== 'aquisicao_lote').map((i) => i.id)
+    const { error } = await supabase.from('orcamento_item').update({ incluido }).in('id', ids)
+    setOcupado(false)
+    setConfirmar(null)
+    if (error) return setErro(mensagemErro(error))
+    onAlterado()
+  }
+
+  if (confirmar !== null)
+    return (
+      <div className="grupo-acoes confirma">
+        <span>{confirmar ? `Incluir ${fora} item(ns) no total?` : `Tirar ${dentro} item(ns) do total?`}</span>
+        <button className="btn sec" onClick={() => setConfirmar(null)}>Não</button>
+        <button className="btn" disabled={ocupado} onClick={() => aplicar(confirmar)}>{ocupado ? '…' : 'Sim'}</button>
+      </div>
+    )
+  return (
+    <div className="grupo-acoes">
+      {fora > 0 && <button className="link" onClick={() => setConfirmar(true)}>Incluir todos ({fora})</button>}
+      {dentro > 0 && <button className="link" onClick={() => setConfirmar(false)}>Tirar todos do total ({dentro})</button>}
+      {erro && <p className="msg erro">{erro}</p>}
+    </div>
+  )
+}
+
 export default function Orcamento() {
   const { membro } = useAuth()
+  const admin = membro?.perfil === 'admin'
   const [filtro, setFiltro] = useState<Filtro>('incluidos')
   const [busca, setBusca] = useState('')
   const { dados, erro, carregando, recarregar } = useDados(
@@ -115,6 +193,7 @@ export default function Orcamento() {
           ))}
         </div>
       </div>
+      {admin && dados && <p className="nota pad">Toque num item para tirar do total, incluir ou editar valores.</p>}
       {!dados ? (
         <Estado carregando={carregando} erro={erro} onTentar={recarregar} />
       ) : grupos.length === 0 ? (
@@ -126,9 +205,10 @@ export default function Orcamento() {
               <h2>{g.classe}</h2>
               <span className="num sub">{brl(g.total)}</span>
             </header>
+            {admin && g.classe !== 'Terreno e impostos' && <AcoesGrupo itens={g.itens} onAlterado={recarregar} />}
             <ul className="lista-itens">
               {g.itens.map((i) => (
-                <ItemLinha key={i.id} i={i} />
+                <ItemLinha key={i.id} i={i} onAlterado={recarregar} />
               ))}
             </ul>
           </section>

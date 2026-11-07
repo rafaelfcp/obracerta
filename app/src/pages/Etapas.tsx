@@ -102,7 +102,7 @@ export function EtapaDetalhe() {
               itens.dados.length ? (
                 <ul className="lista-itens">
                   {itens.dados.map((i) => (
-                    <ItemLinha key={i.id} i={i} />
+                    <ItemLinha key={i.id} i={i} onAlterado={() => { itens.recarregar(); etapa.recarregar() }} />
                   ))}
                 </ul>
               ) : (
