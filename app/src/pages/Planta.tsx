@@ -115,10 +115,32 @@ export default function Planta() {
   useEffect(() => {
     setUrl(null)
     if (!atual) return
-    supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(atual.storage_path, 3600)
-      .then(({ data: d }) => setUrl(d?.signedUrl ?? null))
+    let blobUrl: string | null = null
+    if (atual.storage_path.startsWith('db/')) {
+      // arquivo guardado no próprio banco (obra.anexo_conteudo, base64)
+      supabase
+        .from('anexo_conteudo')
+        .select('base64')
+        .eq('anexo_id', atual.id)
+        .maybeSingle()
+        .then(({ data: d }) => {
+          if (!d) return
+          const bin = atob(d.base64)
+          const bytes = new Uint8Array(bin.length)
+          for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k)
+          blobUrl = URL.createObjectURL(new Blob([bytes], { type: atual.mime ?? 'application/pdf' }))
+          setUrl(blobUrl)
+        })
+    } else {
+      // arquivo no Storage (bucket privado): link temporário de 1 h
+      supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(atual.storage_path, 3600)
+        .then(({ data: d }) => setUrl(d?.signedUrl ?? null))
+    }
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl)
+    }
   }, [atual?.storage_path])
 
   async function enviar(ev: ChangeEvent<HTMLInputElement>) {
