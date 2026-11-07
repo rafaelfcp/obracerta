@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/auth'
 import Layout from './components/Layout'
@@ -8,6 +9,9 @@ import Etapas, { EtapaDetalhe } from './pages/Etapas'
 import Orcamento from './pages/Orcamento'
 import Alertas from './pages/Alertas'
 import Conta, { TrocarSenha } from './pages/Conta'
+
+// pdf.js é pesado: só baixa quando abrir a aba Planta
+const Planta = lazy(() => import('./pages/Planta'))
 
 function Portao() {
   const { session, membro, carregando, semObra, recuperando, fimRecuperacao } = useAuth()
@@ -37,6 +41,7 @@ function Portao() {
         <Route path="etapas" element={<Etapas />} />
         <Route path="etapas/:id" element={<EtapaDetalhe />} />
         <Route path="orcamento" element={<Orcamento />} />
+        <Route path="planta" element={<Suspense fallback={<div className="pagina"><div className="skeleton alto" /></div>}><Planta /></Suspense>} />
         <Route path="alertas" element={<Alertas />} />
         <Route path="conta" element={<Conta />} />
         <Route path="*" element={<Navigate to="/" replace />} />

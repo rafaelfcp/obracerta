@@ -7,6 +7,7 @@ import type { Item } from '../lib/tipos'
 import { Chip, Estado, Vazio } from '../components/ui'
 import { Topo } from '../components/Layout'
 import EditarItem, { alternarIncluido } from '../components/EditarItem'
+import { CENARIOS, escolherCenario, temPadroes, usePrecos, valorNoCenario, type Cenario, type MapaPrecos, type Precos } from '../lib/precos'
 
 type Filtro = 'incluidos' | 'opcionais' | 'revisar' | 'todos'
 
@@ -22,7 +23,48 @@ const CENARIO: Record<string, string> = { economico: 'Econômico', medio: 'Médi
 // valor exibido: o orçado (itens incluídos) ou, para opcionais fora do total, o valor do cenário escolhido
 const valorItem = (i: Item) => (i.incluido ? Number(i.orcado) : Number(i.valor_orcado_cenario))
 
-export function ItemLinha({ i, onAlterado }: { i: Item; onAlterado?: () => void }) {
+// Seletor dos 3 padrões com o valor de cada um; tocar grava o padrão e o banco recalcula o item.
+function SeletorPadrao({ i, precos, podeEditar, onAlterado }: { i: Item; precos: Precos; podeEditar: boolean; onAlterado?: () => void }) {
+  const [salvando, setSalvando] = useState<Cenario | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
+  async function escolher(c: Cenario) {
+    if (!podeEditar || c === i.cenario_escolhido) return
+    setSalvando(c)
+    setErro(null)
+    try {
+      await escolherCenario(i.id, c)
+      onAlterado?.()
+    } catch (e) {
+      setErro(mensagemErro(e))
+    } finally {
+      setSalvando(null)
+    }
+  }
+  const atual = valorNoCenario(i, precos, (i.cenario_escolhido as Cenario) ?? 'medio') ?? 0
+  return (
+    <div className="padrao">
+      <span className="rotulo">Padrão do item</span>
+      <div className="padrao-opcoes">
+        {CENARIOS.map(([c, rot]) => {
+          const v = valorNoCenario(i, precos, c)
+          if (v === null) return null
+          const ativo = i.cenario_escolhido === c
+          const dif = v - atual
+          return (
+            <button key={c} className={ativo ? 'ativo' : ''} disabled={!podeEditar || !!salvando} onClick={() => escolher(c)} aria-pressed={ativo}>
+              <span>{rot}</span>
+              <b className="num">{salvando === c ? '…' : brlK(v)}</b>
+              <small className="num">{ativo ? 'escolhido' : `${dif > 0 ? '+' : '−'} ${brlK(Math.abs(dif))}`}</small>
+            </button>
+          )
+        })}
+      </div>
+      {erro && <p className="msg erro">{erro}</p>}
+    </div>
+  )
+}
+
+export function ItemLinha({ i, onAlterado, precos }: { i: Item; onAlterado?: () => void; precos?: Precos }) {
   const { membro } = useAuth()
   const podeEditar = !!membro && !!onAlterado
   const [aberto, setAberto] = useState(false)
@@ -73,6 +115,7 @@ export function ItemLinha({ i, onAlterado }: { i: Item; onAlterado?: () => void 
               <div className="full"><dt>Revisar</dt><dd>{i.revisar_motivos.map((m) => MOTIVO[m] ?? m).join(', ')}</dd></div>
             )}
           </dl>
+          {temPadroes(i, precos) && <SeletorPadrao i={i} precos={precos!} podeEditar={podeEditar} onAlterado={onAlterado} />}
           {podeEditar && (
             <div className="item-acoes">
               <button className="btn sec" disabled={ocupado} onClick={alternar}>
@@ -134,12 +177,50 @@ function AcoesGrupo({ itens, onAlterado }: { itens: Item[]; onAlterado: () => vo
   )
 }
 
+// Quanto custariam os itens no total se todos usassem o mesmo padrão (itens de valor fechado entram igual).
+function Comparativo({ itens, mapa }: { itens: Item[]; mapa: MapaPrecos }) {
+  const noTotal = itens.filter((i) => i.incluido)
+  const atual = noTotal.reduce((s, i) => s + Number(i.orcado), 0)
+  const porPadrao = CENARIOS.map(([c, rot]) => ({
+    c,
+    rot,
+    total: noTotal.reduce((s, i) => s + (valorNoCenario(i, mapa.get(i.id), c) ?? Number(i.orcado)), 0),
+  }))
+  const mix = CENARIOS.map(([c, rot]) => `${noTotal.filter((i) => i.cenario_escolhido === c && temPadroes(i, mapa.get(i.id))).length} ${rot.toLowerCase()}`).join(' · ')
+  return (
+    <section className="card comparativo">
+      <header className="card-h">
+        <h2>Padrões do orçamento</h2>
+        <span className="sub">itens no total, sem contingência</span>
+      </header>
+      <div className="comp-grade">
+        <div className="comp atual">
+          <span>Escolha atual</span>
+          <b className="num">{brlK(atual)}</b>
+          <small>{mix}</small>
+        </div>
+        {porPadrao.map((p) => (
+          <div key={p.c} className="comp">
+            <span>Tudo {p.rot.toLowerCase()}</span>
+            <b className="num">{brlK(p.total)}</b>
+            <small className={`num ${p.total > atual ? 'neg' : 'pos'}`}>
+              {p.total === atual ? 'igual' : `${p.total > atual ? '+' : '−'} ${brlK(Math.abs(p.total - atual))}`}
+            </small>
+          </div>
+        ))}
+      </div>
+      <p className="nota">Para trocar o padrão de um item, toque nele e escolha Econômico, Médio ou Alto.</p>
+    </section>
+  )
+}
+
 export default function Orcamento() {
   const { membro } = useAuth()
   // admin e colaborador(a) editam o orçamento (migration 011); o banco confere via RLS
   const podeEditar = !!membro
   const [filtro, setFiltro] = useState<Filtro>('incluidos')
   const [busca, setBusca] = useState('')
+  const precos = usePrecos()
   const { dados, erro, carregando, recarregar } = useDados(
     () => supabase.from('v_item_resumo').select('*').eq('obra_id', membro!.obra_id).order('numero_origem').returns<Item[]>(),
     [membro?.obra_id],
@@ -194,7 +275,8 @@ export default function Orcamento() {
           ))}
         </div>
       </div>
-      {podeEditar && dados && <p className="nota pad">Toque num item para tirar do total, incluir ou editar valores.</p>}
+      {dados && filtro === 'incluidos' && !busca && precos.mapa.size > 0 && <Comparativo itens={dados} mapa={precos.mapa} />}
+      {podeEditar && dados && <p className="nota pad">Toque num item para trocar o padrão, tirar do total ou editar valores.</p>}
       {!dados ? (
         <Estado carregando={carregando} erro={erro} onTentar={recarregar} />
       ) : grupos.length === 0 ? (
@@ -209,7 +291,7 @@ export default function Orcamento() {
             {podeEditar && g.classe !== 'Terreno e impostos' && <AcoesGrupo itens={g.itens} onAlterado={recarregar} />}
             <ul className="lista-itens">
               {g.itens.map((i) => (
-                <ItemLinha key={i.id} i={i} onAlterado={recarregar} />
+                <ItemLinha key={i.id} i={i} onAlterado={() => { recarregar(); precos.recarregar() }} precos={precos.mapa.get(i.id)} />
               ))}
             </ul>
           </section>

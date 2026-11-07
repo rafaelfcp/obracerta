@@ -70,7 +70,7 @@ h1, h2, p { margin: 0; }
 /* barra de abas */
 .tabbar {
   position: fixed; inset: auto 0 0 0; z-index: 10;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
@@ -265,3 +265,43 @@ label input:focus, .filtros input:focus { outline: 2px solid var(--pri-2); outli
 .previa { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--pri) 10%, transparent); }
 .previa span { font-size: 13px; color: var(--muted); }
 .previa b { font-size: 18px; }
+
+/* padrões (econômico / médio / alto) */
+.padrao { margin: 8px 0 0 34px; }
+.padrao-opcoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.padrao-opcoes button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 8px 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; min-width: 0; }
+.padrao-opcoes button span { font-size: 12px; color: var(--muted); }
+.padrao-opcoes button b { font-size: 14px; }
+.padrao-opcoes button small { font-size: 11px; color: var(--muted); }
+.padrao-opcoes button.ativo { border-color: var(--pri); background: color-mix(in srgb, var(--pri) 8%, var(--surface)); }
+.padrao-opcoes button.ativo span, .padrao-opcoes button.ativo small { color: var(--pri); font-weight: 600; }
+.padrao-opcoes button:disabled:not(.ativo) { cursor: default; }
+.comp-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.comp { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); min-width: 0; }
+.comp span { font-size: 12px; color: var(--muted); }
+.comp b { font-size: 17px; }
+.comp small { font-size: 11px; color: var(--muted); }
+.comp small.neg { color: var(--bad); }
+.comp small.pos { color: var(--ok); }
+.comp.atual { background: color-mix(in srgb, var(--pri) 12%, transparent); }
+.comp.atual span { color: var(--pri); font-weight: 600; }
+
+/* planta */
+.skeleton.alto { height: 360px; border-radius: var(--radius); }
+.visor { display: flex; flex-direction: column; gap: 8px; }
+.visor-zoom { display: flex; align-items: center; gap: 8px; }
+.visor-zoom .btn { padding: 8px 14px; }
+.visor-zoom a.btn { margin-left: auto; font-size: 13px; }
+.visor-paginas { overflow: auto; border-radius: var(--radius); background: #fff; border: 1px solid var(--line); max-height: 72dvh; -webkit-overflow-scrolling: touch; }
+.visor-paginas canvas { display: block; }
+.visor-paginas canvas + canvas { border-top: 6px solid var(--surface-2); }
+.planta-img { display: block; width: 100%; }
+.versoes { list-style: none; margin: 0 0 10px; padding: 0; }
+.versoes button { display: flex; justify-content: space-between; width: 100%; padding: 8px 0; background: none; border: 0; border-top: 1px solid var(--line); cursor: pointer; text-align: left; }
+.versoes li:first-child button { border-top: 0; }
+.versoes button.ativo { color: var(--pri); font-weight: 600; }
+.versoes small { color: var(--muted); }
+.btn.enviar { display: block; text-align: center; color: #fff; }
+@media (prefers-color-scheme: dark) { .btn.enviar { color: #10201a; } }
+.segmentos button { white-space: nowrap; font-size: 12.5px; padding: 7px 2px; }
+.comparativo .card-h { flex-direction: column; gap: 0; }

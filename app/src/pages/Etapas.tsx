@@ -7,6 +7,7 @@ import type { Etapa, Item } from '../lib/tipos'
 import { Barra, Card, Chip, Estado, Linha, Sinal, Vazio } from '../components/ui'
 import { Topo } from '../components/Layout'
 import { ItemLinha } from './Orcamento'
+import { usePrecos } from '../lib/precos'
 
 const STATUS: Record<string, string> = {
   planejada: 'Planejada',
@@ -66,6 +67,7 @@ export function EtapaDetalhe() {
     () => supabase.from('v_item_resumo').select('*').eq('etapa_id', id!).order('numero_origem').returns<Item[]>(),
     [id],
   )
+  const precos = usePrecos()
   const e = etapa.dados
 
   return (
@@ -102,7 +104,7 @@ export function EtapaDetalhe() {
               itens.dados.length ? (
                 <ul className="lista-itens">
                   {itens.dados.map((i) => (
-                    <ItemLinha key={i.id} i={i} onAlterado={() => { itens.recarregar(); etapa.recarregar() }} />
+                    <ItemLinha key={i.id} i={i} precos={precos.mapa.get(i.id)} onAlterado={() => { itens.recarregar(); etapa.recarregar() }} />
                   ))}
                 </ul>
               ) : (
