@@ -9,6 +9,7 @@ import Etapas, { EtapaDetalhe } from './pages/Etapas'
 import Orcamento from './pages/Orcamento'
 import Alertas from './pages/Alertas'
 import Conta, { TrocarSenha } from './pages/Conta'
+import Relatorios, { RelatorioDetalhe } from './pages/Relatorios'
 
 // pdf.js é pesado: só baixa quando abrir a aba Planta
 const Planta = lazy(() => import('./pages/Planta'))
@@ -43,6 +44,8 @@ function Portao() {
         <Route path="orcamento" element={<Orcamento />} />
         <Route path="planta" element={<Suspense fallback={<div className="pagina"><div className="skeleton alto" /></div>}><Planta /></Suspense>} />
         <Route path="alertas" element={<Alertas />} />
+        <Route path="relatorios" element={<Relatorios />} />
+        <Route path="relatorios/:slug" element={<RelatorioDetalhe />} />
         <Route path="conta" element={<Conta />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

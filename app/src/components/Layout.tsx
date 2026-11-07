@@ -6,6 +6,7 @@ const Ic = {
   orcamento: <path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" fill="none" strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />,
   planta: <path d="M4 4h16v16H4zM4 12h7v8M11 4v5M15 12h5M11 15h4" fill="none" strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />,
   alertas: <path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zm-2 16a2 2 0 0 0 4 0" fill="none" strokeWidth="1.9" strokeLinejoin="round" />,
+  relatorios: <path d="M7 3h7l5 5v13H7zM14 3v5h5M10 17v-3M13 17v-6M16 17v-4" fill="none" strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />,
   conta: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9a7 7 0 0 1 14 0" fill="none" strokeWidth="1.9" strokeLinecap="round" />,
 }
 
@@ -15,6 +16,7 @@ const itens: [string, string, keyof typeof Ic][] = [
   ['/orcamento', 'Orçamento', 'orcamento'],
   ['/planta', 'Planta', 'planta'],
   ['/alertas', 'Alertas', 'alertas'],
+  ['/relatorios', 'Relatórios', 'relatorios'],
   ['/conta', 'Conta', 'conta'],
 ]
 
