@@ -9,6 +9,13 @@
     <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <title>ObraCerta</title>
+    <script>
+      // aplica o tema salvo antes de desenhar a tela (evita piscar claro→escuro)
+      try {
+        var t = localStorage.getItem('obracerta.tema')
+        if (t === 'escuro' || t === 'claro') document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : 'light')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -3,6 +3,7 @@ import { supabase, mensagemErro } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { Card, Linha } from '../components/ui'
 import { Topo } from '../components/Layout'
+import { useTema, type Tema } from '../lib/tema'
 
 export function TrocarSenha({ aoConcluir }: { aoConcluir?: () => void }) {
   const [senha, setSenha] = useState('')
@@ -41,6 +42,7 @@ export function TrocarSenha({ aoConcluir }: { aoConcluir?: () => void }) {
 
 export default function Conta() {
   const { session, membro, sair } = useAuth()
+  const { tema, setTema } = useTema()
   return (
     <div className="pagina">
       <Topo titulo="Conta" />
@@ -48,6 +50,22 @@ export default function Conta() {
         <Linha rotulo="Nome" valor={membro?.nome_exibicao ?? '—'} />
         <Linha rotulo="E-mail" valor={session?.user.email} />
         <Linha rotulo="Perfil" valor={membro?.perfil === 'admin' ? 'Administrador' : 'Colaboradora(or)'} />
+      </Card>
+      <Card titulo="Aparência">
+        <div className="segmentos tres" role="radiogroup" aria-label="Tema">
+          {(
+            [
+              ['auto', 'Automático'],
+              ['claro', 'Claro'],
+              ['escuro', 'Escuro'],
+            ] as [Tema, string][]
+          ).map(([t, rot]) => (
+            <button key={t} role="radio" aria-checked={tema === t} className={tema === t ? 'ativo' : ''} onClick={() => setTema(t)}>
+              {rot}
+            </button>
+          ))}
+        </div>
+        <p className="nota">Automático segue o modo do celular. A escolha fica salva neste aparelho.</p>
       </Card>
       <Card titulo="Trocar senha">
         <TrocarSenha />

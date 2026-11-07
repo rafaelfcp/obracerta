@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { brl, brlK, data, pct } from '../lib/format'
 import type { Etapa, Painel as TPainel } from '../lib/tipos'
 import { Barra, Card, Estado, Linha, Sinal } from '../components/ui'
+import { BotaoTema } from '../lib/tema'
 
 const STATUS: Record<string, string> = {
   planejamento: 'Planejamento',
@@ -40,6 +41,7 @@ export default function Painel() {
   return (
     <div className="pagina">
       <header className="hero">
+        <BotaoTema />
         <p className="hero-ola">{nomeCurto}</p>
         <h1>{p.nome}</h1>
         <div className="hero-meta">

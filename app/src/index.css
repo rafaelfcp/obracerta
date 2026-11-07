@@ -17,10 +17,12 @@
   --radius: 16px;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.04);
   --tabbar-h: 64px;
+  --on-pri: #ffffff;
   color-scheme: light;
 }
+/* modo escuro: automático (segue o sistema) ou forçado por data-theme no <html> */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #121614;
     --surface: #1b201d;
     --surface-2: #232a26;
@@ -36,8 +38,28 @@
     --warn-bg: #3a2f17;
     --bad-bg: #3d211d;
     --shadow: none;
+    --on-pri: #10201a;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+    --bg: #121614;
+    --surface: #1b201d;
+    --surface-2: #232a26;
+    --text: #e8ebe6;
+    --muted: #9aa198;
+    --line: #2c3430;
+    --pri: #8fc4a6;
+    --pri-2: #6fae8b;
+    --ok: #6cc28e;
+    --warn: #e5b350;
+    --bad: #ef7a6c;
+    --ok-bg: #1d3326;
+    --warn-bg: #3a2f17;
+    --bad-bg: #3d211d;
+    --shadow: none;
+    --on-pri: #10201a;
+    color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -203,8 +225,7 @@ h1, h2, p { margin: 0; }
 .vazio { color: var(--muted); text-align: center; padding: 24px 0; }
 
 /* botões e formulários */
-.btn { border: 0; border-radius: 12px; padding: 12px 16px; background: var(--pri); color: #fff; font-weight: 600; cursor: pointer; }
-@media (prefers-color-scheme: dark) { .btn { color: #10201a; } }
+.btn { border: 0; border-radius: 12px; padding: 12px 16px; background: var(--pri); color: var(--on-pri); font-weight: 600; cursor: pointer; }
 .btn:disabled { opacity: 0.6; }
 .btn.sec { background: var(--surface-2); color: var(--text); }
 .btn.largo { width: 100%; }
@@ -301,7 +322,11 @@ label input:focus, .filtros input:focus { outline: 2px solid var(--pri-2); outli
 .versoes li:first-child button { border-top: 0; }
 .versoes button.ativo { color: var(--pri); font-weight: 600; }
 .versoes small { color: var(--muted); }
-.btn.enviar { display: block; text-align: center; color: #fff; }
-@media (prefers-color-scheme: dark) { .btn.enviar { color: #10201a; } }
+.btn.enviar { display: block; text-align: center; color: var(--on-pri); }
 .segmentos button { white-space: nowrap; font-size: 12.5px; padding: 7px 2px; }
 .comparativo .card-h { flex-direction: column; gap: 0; }
+
+/* seletor de tema */
+.tema-btn { z-index: 2; position: absolute; top: calc(env(safe-area-inset-top) + 16px); right: 16px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgb(255 255 255 / 0.14); color: #f6f4ef; display: grid; place-items: center; cursor: pointer; }
+.hero { position: relative; }
+.hero-ola, .hero h1 { padding-right: 48px; }
