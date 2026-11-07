@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env.local
+*.log
+
+# dados pessoais da obra: não vão para o repositório público
+data/
+supabase/seed/
