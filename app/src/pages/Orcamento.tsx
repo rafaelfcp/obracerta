@@ -24,7 +24,7 @@ const valorItem = (i: Item) => (i.incluido ? Number(i.orcado) : Number(i.valor_o
 
 export function ItemLinha({ i, onAlterado }: { i: Item; onAlterado?: () => void }) {
   const { membro } = useAuth()
-  const admin = membro?.perfil === 'admin' && !!onAlterado
+  const podeEditar = !!membro && !!onAlterado
   const [aberto, setAberto] = useState(false)
   const [editando, setEditando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
@@ -73,7 +73,7 @@ export function ItemLinha({ i, onAlterado }: { i: Item; onAlterado?: () => void 
               <div className="full"><dt>Revisar</dt><dd>{i.revisar_motivos.map((m) => MOTIVO[m] ?? m).join(', ')}</dd></div>
             )}
           </dl>
-          {admin && (
+          {podeEditar && (
             <div className="item-acoes">
               <button className="btn sec" disabled={ocupado} onClick={alternar}>
                 {ocupado ? '…' : i.incluido ? 'Tirar do total' : 'Incluir no total'}
@@ -136,7 +136,8 @@ function AcoesGrupo({ itens, onAlterado }: { itens: Item[]; onAlterado: () => vo
 
 export default function Orcamento() {
   const { membro } = useAuth()
-  const admin = membro?.perfil === 'admin'
+  // admin e colaborador(a) editam o orçamento (migration 011); o banco confere via RLS
+  const podeEditar = !!membro
   const [filtro, setFiltro] = useState<Filtro>('incluidos')
   const [busca, setBusca] = useState('')
   const { dados, erro, carregando, recarregar } = useDados(
@@ -193,7 +194,7 @@ export default function Orcamento() {
           ))}
         </div>
       </div>
-      {admin && dados && <p className="nota pad">Toque num item para tirar do total, incluir ou editar valores.</p>}
+      {podeEditar && dados && <p className="nota pad">Toque num item para tirar do total, incluir ou editar valores.</p>}
       {!dados ? (
         <Estado carregando={carregando} erro={erro} onTentar={recarregar} />
       ) : grupos.length === 0 ? (
@@ -205,7 +206,7 @@ export default function Orcamento() {
               <h2>{g.classe}</h2>
               <span className="num sub">{brl(g.total)}</span>
             </header>
-            {admin && g.classe !== 'Terreno e impostos' && <AcoesGrupo itens={g.itens} onAlterado={recarregar} />}
+            {podeEditar && g.classe !== 'Terreno e impostos' && <AcoesGrupo itens={g.itens} onAlterado={recarregar} />}
             <ul className="lista-itens">
               {g.itens.map((i) => (
                 <ItemLinha key={i.id} i={i} onAlterado={recarregar} />
