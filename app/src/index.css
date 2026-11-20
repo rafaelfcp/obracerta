@@ -354,3 +354,72 @@ label textarea:focus { outline: 2px solid var(--pri-2); outline-offset: 1px; }
 .sub.neg { color: var(--bad); }
 /* 7 abas: rótulo menor em telas estreitas */
 @media (max-width: 400px) { .tabbar a { font-size: 9.5px; letter-spacing: -0.01em; } .tabbar svg { width: 21px; height: 21px; } }
+
+/* orçado x realizado (painel escuro fixo, igual nos dois temas) */
+.or {
+  --or-bg: #0e1411; --or-bg2: #141d19; --or-tx: #e8ebe6; --or-mu: #8b948c; --or-ln: #24302a;
+  --or-orc: #6ea8ff; --or-real: #3ecf8e; --or-bad: #ff5a4e; --or-warn: #f5b041;
+  background: radial-gradient(120% 80% at 100% 0%, #1a2620 0%, var(--or-bg) 60%);
+  color: var(--or-tx); border-radius: var(--radius); border: 1px solid var(--or-ln);
+  padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+}
+
+.or dd, .or-card-h em { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+.or-h { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+.or-h h2 { font-size: 12px; letter-spacing: 0.06em; font-weight: 800; }
+.or-h h2 span { color: var(--or-mu); font-weight: 500; letter-spacing: 0; }
+.or-alerta { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--or-mu); margin-top: 2px; }
+.or-alerta i { width: 8px; height: 8px; border-radius: 50%; border: 2px solid currentColor; flex: none; }
+.or-alerta.bad { color: var(--or-bad); }
+.or-alerta.ok { color: var(--or-real); }
+.or-leg { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; font-size: 11px; color: var(--or-mu); }
+.or-leg li { display: flex; align-items: center; gap: 4px; }
+.or-leg li::before { content: ''; width: 14px; height: 0; border-top: 2px dashed var(--or-orc); }
+.or-leg li.real::before { border-top: 3px solid var(--or-real); }
+.or-leg li.proj::before { border-top-color: var(--or-bad); }
+.or-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.or-kpi { background: rgb(0 0 0 / 0.35); border: 1px solid var(--or-ln); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; min-width: 0; }
+.or-kpi.proj.bad { border-color: color-mix(in srgb, var(--or-bad) 60%, transparent); background: color-mix(in srgb, var(--or-bad) 12%, #000); }
+.or-kpi span { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--or-mu); font-weight: 700; }
+.or-kpi strong { font-size: 22px; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; margin: 2px 0; }
+.or-kpi small { font-size: 11px; color: var(--or-mu); }
+.or-kpi strong.bad { color: var(--or-bad); } .or-kpi strong.ok { color: var(--or-real); } .or-kpi strong.neu { color: var(--or-tx); }
+.or-kpi.proj.bad dd { color: var(--or-bad); }
+.or-kpi dl, .or-card dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; margin: 6px 0 0; font-size: 11px; }
+.or dt { color: var(--or-mu); } .or dd { margin: 0; text-align: right; white-space: nowrap; }
+.or-curva { width: 100%; height: auto; display: block; }
+.or-grade { stroke: var(--or-ln); stroke-width: 1; }
+.or-l { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.or-l.orc { stroke: var(--or-orc); stroke-dasharray: 5 5; }
+.or-l.proj { stroke: var(--or-bad); stroke-dasharray: 7 6; opacity: 0.9; }
+.or-l.proj.glow { stroke-width: 7; opacity: 0.35; }
+.or-l.real { stroke: var(--or-real); stroke-width: 3; }
+.or-l.real.acima { stroke: var(--or-bad); }
+.or-ponto { fill: var(--or-bg); stroke: var(--or-real); stroke-width: 2.5; }
+.or-ponto.acima { stroke: var(--or-bad); }
+.or-fim { fill: var(--or-bg); stroke-width: 2.5; }
+.or-fim.orc { stroke: var(--or-orc); } .or-fim.proj { stroke: var(--or-bad); }
+.or-tick { fill: var(--or-mu); font-size: 9px; text-anchor: middle; }
+.or-eixo { font-size: 10px; color: var(--or-mu); margin-top: -6px; }
+.or-cards { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -14px; padding: 2px 14px 4px; scrollbar-width: none; }
+.or-cards::-webkit-scrollbar { display: none; }
+.or-card { flex: 0 0 148px; width: 148px; min-width: 0; scroll-snap-align: start; background: rgb(255 255 255 / 0.04); border: 1px solid var(--or-ln); border-radius: 12px; padding: 9px 10px; display: flex; flex-direction: column; gap: 6px; }
+.or-card.bad { border-color: color-mix(in srgb, var(--or-bad) 55%, transparent); background: color-mix(in srgb, var(--or-bad) 9%, transparent); }
+.or-card.warn { border-color: color-mix(in srgb, var(--or-warn) 45%, transparent); }
+.or-card.mut { opacity: 0.7; border-style: dashed; }
+.or-card-h { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+.or-card-h { align-items: flex-start; }
+.or-card-h b { font-size: 12px; font-weight: 700; line-height: 1.25; min-height: 2.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.or-card-h em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--or-mu); flex: none; }
+.or-card.ok .or-card-h em { color: var(--or-real); } .or-card.bad .or-card-h em { color: var(--or-bad); } .or-card.warn .or-card-h em { color: var(--or-warn); }
+.or-barra { position: relative; height: 7px; border-radius: 4px; background: rgb(255 255 255 / 0.09); }
+.or-barra-fill { height: 100%; border-radius: 4px; background: var(--or-real); min-width: 0; }
+.or-card.bad .or-barra-fill { background: var(--or-bad); } .or-card.warn .or-barra-fill { background: var(--or-warn); }
+.or-barra i { position: absolute; top: -3px; width: 2px; height: 13px; margin-left: -1px; background: var(--or-tx); border-radius: 1px; }
+.or-card dd.real { color: var(--or-tx); font-weight: 700; }
+.or-card.bad dd.real.tem { color: var(--or-bad); } .or-card.ok dd.real.tem { color: var(--or-real); } .or-card dd.real:not(.tem) { color: var(--or-mu); font-weight: 400; }
+.or-atencao { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.or-atencao li { padding-left: 14px; position: relative; color: var(--or-mu); }
+.or-atencao li::before { content: ''; position: absolute; left: 0; top: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--or-warn); }
+.or-atencao li.bad::before { background: var(--or-bad); }
+@media (max-width: 360px) { .or-kpi strong { font-size: 19px; } }

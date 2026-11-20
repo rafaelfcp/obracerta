@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase'
 import { useDados } from '../lib/useDados'
 import { useAuth } from '../lib/auth'
 import { brl, brlK, data, pct } from '../lib/format'
-import type { Etapa, Painel as TPainel } from '../lib/tipos'
+import type { Painel as TPainel } from '../lib/tipos'
 import { Barra, Card, Estado, Linha, Sinal } from '../components/ui'
+import OrcadoRealizado, { type EtapaOR } from '../components/OrcadoRealizado'
 import { BotaoTema } from '../lib/tema'
 
 const STATUS: Record<string, string> = {
@@ -24,11 +25,10 @@ export default function Painel() {
     () =>
       supabase
         .from('v_etapa_painel')
-        .select('id, ordem, nome, orcado, pago, pct_financeiro, semaforo')
+        .select('id, ordem, nome, orcado, contratado, pago, projetado, semaforo')
         .eq('obra_id', membro!.obra_id)
-        .order('orcado', { ascending: false })
-        .limit(5)
-        .returns<Etapa[]>(),
+        .order('ordem')
+        .returns<EtapaOR[]>(),
     [membro?.obra_id],
   )
 
@@ -69,6 +69,12 @@ export default function Painel() {
         </Link>
       )}
 
+      {etapas.dados ? (
+        <OrcadoRealizado etapas={etapas.dados} obra={p.nome} />
+      ) : (
+        <Estado carregando={etapas.carregando} erro={etapas.erro} onTentar={etapas.recarregar} />
+      )}
+
       <Card titulo="Composição do orçamento">
         <Linha rotulo="Lote e custas" valor={brl(p.orcado_lote)} />
         <Linha rotulo="Obra (itens incluídos)" valor={brl(p.orcado_obra)} />
@@ -92,26 +98,6 @@ export default function Painel() {
         <Linha rotulo="Liberado até agora" valor={brl(p.caixa_liberado)} />
         <Linha rotulo="Juros de obra previstos" valor={brl(p.juros_obra_previstos)} />
         <Linha rotulo="Dinheiro próprio ainda necessário" valor={brl(p.necessidade_complementar)} forte tom="neg" />
-      </Card>
-
-      <Card titulo="Maiores etapas" extra={<Link to="/etapas" className="mini-link">ver todas ›</Link>}>
-        {etapas.dados ? (
-          <ul className="lista-simples">
-            {etapas.dados.map((e) => (
-              <li key={e.id}>
-                <Link to={`/etapas/${e.id}`}>
-                  <div className="ls-top">
-                    <span>{e.ordem}. {e.nome}</span>
-                    <span className="num">{brlK(e.orcado)}</span>
-                  </div>
-                  <Barra valor={e.pct_financeiro} tom={e.semaforo === 'vermelho' ? 'bad' : e.semaforo === 'amarelo' ? 'warn' : 'pri'} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Estado carregando={etapas.carregando} erro={etapas.erro} onTentar={etapas.recarregar} />
-        )}
       </Card>
 
       <Card titulo="Prazos">
